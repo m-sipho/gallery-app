@@ -54,7 +54,12 @@ async def upload_image(file: UploadFile = File(...)):
     """Upload a file to an S3 bucket"""
     try:
         s3_client.upload_fileobj(file.file, s3_bucket_name, f"gallery/{file.filename}")
-        return {"message": "image successfully uploaded"}
+        file_url = f"https://{s3_bucket_name}.s3.{aws_region_name}.amazonaws.com/gallery/{file.filename}"
+        return {
+            "message": "image successfully uploaded",
+            "url": file_url,
+            "filename": file.filename
+        }
     except ClientError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

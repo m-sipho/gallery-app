@@ -55,9 +55,15 @@ function App() {
   };
 
   const handleDelete = async (filename) => {
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
+
     try {
       await axios.delete(`http://localhost:8000/images/${encodeURIComponent(filename)}`)
       setImages((prevImages) => prevImages.filter((image) => image.filename !== filename));
+
+      if (selectedImg?.filename === filename) {
+        setSelectedImage(null);
+      }
       alert("Image deleted successfully");
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -80,7 +86,7 @@ function App() {
 
       <div className='columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4 overflow-y-auto'>
         {images.map((image, index) => (
-          <GalleryImage index={index} image={image} onMaximize={setSelectedImage} />
+          <GalleryImage index={index} image={image} onMaximize={setSelectedImage} onDelete={handleDelete} />
         ))}
       </div>
 

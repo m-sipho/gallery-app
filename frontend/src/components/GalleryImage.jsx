@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Maximize, Trash2 } from "lucide-react";
 
 
-function GalleryImage({ index, image, onMaximize }) {
+function GalleryImage({ index, image, onMaximize, onDelete }) {
 
     const [isLoading, setIsLoading] = useState(true);
 
@@ -18,7 +18,7 @@ function GalleryImage({ index, image, onMaximize }) {
                 <button className='cursor-pointer' onClick={() => onMaximize(image)} title='Maximize'>
                 <Maximize className='text-white hover:text-zinc-300' size={32} />
                 </button>
-                <button className='cursor-pointer' title='Delete'>
+                <button className='cursor-pointer' onClick={() => onDelete(image.filename)} title='Delete'>
                 <Trash2 className='text-white hover:text-zinc-300' size={32} />
                 </button>
             </div>

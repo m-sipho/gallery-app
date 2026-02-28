@@ -67,6 +67,7 @@ async def get_all_images():
         # List all objects (images) in the S3 bucket
         response = s3_client.list_objects_v2(Bucket=s3_bucket_name, Prefix="gallery/")
         files = response.get("Contents", [])
+        logger.info(files)
         image_list = []
 
         for obj in files:
@@ -80,7 +81,7 @@ async def get_all_images():
             )
             image_list.append({"url": url, "filename": fname.split("/")[-1]})
 
-            return {"image_urls": image_list}
+        return {"image_urls": image_list}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

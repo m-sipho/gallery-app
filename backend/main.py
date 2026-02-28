@@ -32,4 +32,7 @@ s3_client = boto3.client(
     region_name=aws_region_name,
 )
 
-print(s3_client)
+@app.get("/")
+def health_check():
+    return {"message": "hello_world"}
+

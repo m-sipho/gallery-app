@@ -86,3 +86,15 @@ async def get_all_images():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+    
+@app.delete("/images/{filename}")
+async def delete_image(filename: str):
+    try:
+        # Delete the image from AWS S3
+        s3_client.delete_object(Bucket=s3_bucket_name, Key=f"gallery/{filename}")
+        return {"message": f"Successfully deleted {filename}"}
+    except ClientError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )

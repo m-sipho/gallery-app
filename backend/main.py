@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 import boto3
+from botocore.exceptions import ClientError
 import os
 from dotenv import load_dotenv
 
@@ -36,3 +37,14 @@ s3_client = boto3.client(
 def health_check():
     return {"message": "hello_world"}
 
+@app.post("/upload")
+async def upload_image(file: UploadFile = File(...)):
+    """Upload a file to an S3 bucket"""
+    try:
+        response = s3_client.upload_fileobj(file.file, s3_bucket_name, f"gallery/{file.filename}")
+        return {"message": f"image successfully uploaded: {response}"}
+    except ClientError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to upload the image"
+        )

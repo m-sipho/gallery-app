@@ -9,10 +9,33 @@ function App() {
   const [selectedImg, setSelectedImage] = useState(null);
 
   // Handle file upload
-  const handleUpload = (e) => {
+  const handleUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const newImages = files.map(file => URL.createObjectURL(file));
-    setImages(prev => [...prev, ...newImages]);
+    if (files.length === 0) return;
+
+    // Process each file
+    for (const file of files) {
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      try {
+        const response = await axios.post("http://localhost:8000/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          }
+        });
+
+        if (response.status === 200) {
+          alert(`${file.name} uploaded successfully!`);
+        }
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        alert(`Failed to upload ${file.name}`)
+      }
+    }
+
+    fetchImages();
   }
 
   useEffect(() => {

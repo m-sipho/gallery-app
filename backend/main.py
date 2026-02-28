@@ -4,8 +4,20 @@ import boto3
 from botocore.exceptions import ClientError
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
+
+# Configure logging
+logger = logging.getLogger("gallery")
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
 
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -41,10 +53,36 @@ def health_check():
 async def upload_image(file: UploadFile = File(...)):
     """Upload a file to an S3 bucket"""
     try:
-        response = s3_client.upload_fileobj(file.file, s3_bucket_name, f"gallery/{file.filename}")
-        return {"message": f"image successfully uploaded: {response}"}
+        s3_client.upload_fileobj(file.file, s3_bucket_name, f"gallery/{file.filename}")
+        return {"message": "image successfully uploaded"}
     except ClientError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Failed to upload the image"
+        )
+
+@app.get("/images")
+async def get_all_images():
+    try:
+        # List all objects (images) in the S3 bucket
+        response = s3_client.list_objects_v2(Bucket=s3_bucket_name, Prefix="gallery/")
+        files = response.get("Contents", [])
+        image_list = []
+
+        for obj in files:
+            fname = obj["Key"]
+            logger.info(fname)
+            # Generate the pre-signed URL
+            url = s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": s3_bucket_name, "Key": fname},
+                ExpiresIn=3600
+            )
+            image_list.append({"url": url, "filename": fname.split("/")[-1]})
+
+            return {"image_urls": image_list}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )

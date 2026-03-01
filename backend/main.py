@@ -5,6 +5,8 @@ from botocore.exceptions import ClientError
 import os
 from dotenv import load_dotenv
 import logging
+from PIL import Image
+import io
 
 load_dotenv()
 
@@ -53,12 +55,28 @@ def health_check():
 async def upload_image(file: UploadFile = File(...)):
     """Upload a file to an S3 bucket"""
     try:
-        s3_client.upload_fileobj(file.file, s3_bucket_name, f"gallery/{file.filename}")
+        # Read file to get dimensions
+        content = await file.read()
+        img = Image.open(io.BytesIO(content))
+        width, height = img.size
+
+        s3_client.put_object(
+            Bucket=s3_bucket_name,
+            Key=f"gallery/{file.filename}",
+            Body=content,
+            ContentType=file.content_type,
+            Metadata={
+                "width": str(width),
+                "height": str(height)
+            }
+        )
         file_url = f"https://{s3_bucket_name}.s3.{aws_region_name}.amazonaws.com/gallery/{file.filename}"
         return {
             "message": "image successfully uploaded",
             "url": file_url,
-            "filename": file.filename
+            "filename": file.filename,
+            "width": width,
+            "height": height
         }
     except ClientError as e:
         raise HTTPException(
@@ -78,13 +96,17 @@ async def get_all_images():
         for obj in files:
             fname = obj["Key"]
             logger.info(fname)
+
+            head = s3_client.head_object(Bucket=s3_bucket_name, Key=fname)
+            metadata = head.get("Metadata", {})
+
             # Generate the pre-signed URL
             url = s3_client.generate_presigned_url(
                 "get_object",
                 Params={"Bucket": s3_bucket_name, "Key": fname},
                 ExpiresIn=3600
             )
-            image_list.append({"url": url, "filename": fname.split("/")[-1]})
+            image_list.append({"url": url, "filename": fname.split("/")[-1], "width": metadata.get("width"), "height": metadata.get("height")})
 
         return {"image_urls": image_list}
     except Exception as e:

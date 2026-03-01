@@ -5,12 +5,13 @@ import { Maximize, Trash2 } from "lucide-react";
 function GalleryImage({ index, image, onMaximize, onDelete }) {
 
     const [isLoading, setIsLoading] = useState(true);
+    const imageRatio = image.width && image.height ? `${image.width} / ${image.height}` : '1 / 1'
 
     return (
-        <div key={index} className='break-inside-avoid group relative overflow-hidden rounded-xl'>
+        <div key={index} className='break-inside-avoid group relative overflow-hidden rounded-xl' style={{ aspectRatio: imageRatio }}>
             {isLoading && (
-                <div className='w-full animate-pulse bg-gray-300 flex items-center justify-center'>
-                <div className='h-12 w-12 rounded-full bg-gray-400/50'></div>
+                <div className='w-full animate-pulse bg-gray-300 flex items-center justify-center' style={{ aspectRatio: imageRatio }}>
+                    
                 </div>
             )}
             <img src={image.url} alt={`Gallery Image ${index}`} className={`w-full h-auto object-cover transition-transform duration-500 group-hover:scale-110 ${isLoading ? 'opacity-0 h-0' : 'opacity-100'}`} onLoad={() => setIsLoading(false)} loading='lazy' />

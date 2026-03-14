@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 import boto3
 from botocore.exceptions import ClientError
@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import logging
 from PIL import Image
 import io
+import re
 
 load_dotenv()
 
@@ -60,9 +61,11 @@ async def upload_image(file: UploadFile = File(...)):
         img = Image.open(io.BytesIO(content))
         width, height = img.size
 
+        s3_key = f"gallery/w{width}_h{height}_{file.filename}"
+
         s3_client.put_object(
             Bucket=s3_bucket_name,
-            Key=f"gallery/{file.filename}",
+            Key=s3_key,
             Body=content,
             ContentType=file.content_type,
             Metadata={
@@ -85,20 +88,31 @@ async def upload_image(file: UploadFile = File(...)):
         )
 
 @app.get("/images")
-async def get_all_images():
+async def get_all_images(limit: int = Query(20, gt=0, le=100), offset: str = Query(None)):
     try:
-        # List all objects (images) in the S3 bucket
-        response = s3_client.list_objects_v2(Bucket=s3_bucket_name, Prefix="gallery/")
-        files = response.get("Contents", [])
-        logger.info(files)
-        image_list = []
+        # Use list_objects_v2 with MaxKeys for pagination
+        params = {
+            "Bucket": s3_bucket_name,
+            "Prefix": "gallery/",
+            "MaxKeys": limit
+        }
 
+        if offset:
+            params["ContinuationToken"] = offset
+        
+
+        response = s3_client.list_objects_v2(**params)
+        files = response.get("Contents", [])
+        next_token = response.get("NextContinuationToken")
+
+        image_list = []
         for obj in files:
             fname = obj["Key"]
-            logger.info(fname)
 
-            head = s3_client.head_object(Bucket=s3_bucket_name, Key=fname)
-            metadata = head.get("Metadata", {})
+            # Use regex to find width and height
+            dimensions = re.search(r'w(\d+)_h(\d+)_', fname)
+            width = int(dimensions.group(1)) if dimensions else 0
+            height = int(dimensions.group(2)) if dimensions else 0
 
             # Generate the pre-signed URL
             url = s3_client.generate_presigned_url(
@@ -106,9 +120,19 @@ async def get_all_images():
                 Params={"Bucket": s3_bucket_name, "Key": fname},
                 ExpiresIn=3600
             )
-            image_list.append({"url": url, "filename": fname.split("/")[-1], "width": metadata.get("width"), "height": metadata.get("height")})
-
-        return {"image_urls": image_list}
+            logger.info(f"Size: {obj["Size"]}")
+            image_list.append({
+                "url": url,
+                "filename": fname.split("/")[-1],
+                "width": width,
+                "height": height,
+                "size": obj["Size"],
+                "last_modified": obj["LastModified"]
+            })
+        return {
+            "image_urls": image_list,
+            "next_offset": next_token
+        }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

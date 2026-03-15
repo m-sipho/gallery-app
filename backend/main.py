@@ -31,7 +31,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",
-    "https://gallery-app-blue-ten.vercel.app/"
+    "https://gallery-app-blue-ten.vercel.app"
 ]
 
 app.add_middleware(

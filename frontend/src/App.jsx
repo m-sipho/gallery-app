@@ -13,6 +13,33 @@ function App() {
   const [totalFiles, setTotalFiles] = useState(0);
   const [nextOffset, setNextOffset] = useState(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;  // Minimum distance considered a swipe
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      showNext();
+    }
+
+    if (isRightSwipe) {
+      showPrev();
+    }
+  };
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -176,7 +203,7 @@ function App() {
       </div>
 
       {selectedImgIndex !== null && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300'>
+        <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300'>
           <button onClick={() => setSelectedImgIndex(null)} className='absolute top-6 right-6 text-white hover:text-gray-300 transition-colors'>
             <X className='cursor-pointer' size={40} />
           </button>

@@ -1,16 +1,43 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { X, Upload } from "lucide-react"
+import { X, Upload, ChevronLeft, ChevronRight } from "lucide-react"
 import GalleryImage from './components/GalleryImage';
 
 function App() {
   
   const [images, setImages] = useState([]);
-  const [selectedImg, setSelectedImage] = useState(null);
+  const [selectedImgIndex, setSelectedImgIndex] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (selectedImgIndex === null) return;
+      if (e.key === "ArrowRight") showNext();
+      if (e.key === "ArrowLeft") showPrev();
+      if (e.key === "Escape") setSelectedImgIndex(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedImgIndex, images.length]);
+
+  // Navigate to the right
+  const showNext = (e) => {
+    e?.stopPropagation();
+    if (selectedImgIndex < images.length - 1) {
+      setSelectedImgIndex(selectedImgIndex + 1);
+    }
+  };
+
+  // Navigate to the left
+  const showPrev = (e) => {
+    e?.stopPropagation();
+    if (selectedImgIndex > 0) {
+      setSelectedImgIndex(selectedImgIndex - 1);
+    }
+  };
 
   // Handle file upload
   const handleUpload = async (e) => {
@@ -83,9 +110,9 @@ function App() {
       await axios.delete(`http://localhost:8000/images/${encodeURIComponent(filename)}`)
       setImages((prevImages) => prevImages.filter((image) => image.filename !== filename));
 
-      if (selectedImg?.filename === filename) {
-        setSelectedImage(null);
-      }
+      // if (selectedImg?.filename === filename) {
+      //   setSelectedImage(null);
+      // }
     } catch (error) {
       console.error("Error deleting image:", error);
       alert("Error deleting image");
@@ -126,16 +153,39 @@ function App() {
 
       <div className='columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4 overflow-y-auto'>
         {images.map((image, index) => (
-          <GalleryImage index={index} image={image} onMaximize={setSelectedImage} onDelete={handleDelete} />
+          <GalleryImage index={index} image={image} onMaximize={() => setSelectedImgIndex(index)} onDelete={handleDelete} />
         ))}
       </div>
 
-      {selectedImg && (
+      {selectedImgIndex !== null && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300'>
-          <button onClick={() => setSelectedImage(null)} className='absolute top-6 right-6 text-white hover:text-gray-300 transition-colors'>
+          <button onClick={() => setSelectedImgIndex(null)} className='absolute top-6 right-6 text-white hover:text-gray-300 transition-colors'>
             <X className='cursor-pointer' size={40} />
           </button>
-          <img src={selectedImg.url} alt="Fullscreen view" className='max-w-full text-white max-h-[90vh] rounded-lg object-contain' />
+
+          {/* Left Arrow */}
+          {selectedImgIndex > 0 && (
+            <button onClick={showPrev} className='absolute left-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-aa z-60'>
+              <ChevronLeft size={30} />
+            </button>
+          )}
+          <div className='relative flex flex-col items-center max-w-full' onClick={(e) => e.stopPropagation()}>
+            <img src={images[selectedImgIndex].url} alt="Fullscreen view" className='max-w-full text-white max-h-[90vh] rounded-lg object-contain' />
+
+            {/* Counter */}
+            <div className='mt-6 text-white font-mono bg-white/10 px-4 py-1.5 rounded-full border border-white/10 tracking-widest'>
+              <span className='text-emerald-400 font-bold'>{selectedImgIndex + 1}</span>
+              <span className='mx-2 opacity-30'>/</span>
+              {images.length}
+            </div>
+          </div>
+
+          {/* Right Arrow */}
+          {selectedImgIndex < images.length - 1 && (
+            <button onClick={showNext} className='absolute right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-60'>
+              <ChevronRight size={30} />
+            </button>
+          )}
         </div>
       )}
     </div>

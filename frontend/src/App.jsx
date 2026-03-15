@@ -11,6 +11,8 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
+  const [nextOffset, setNextOffset] = useState(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -91,15 +93,31 @@ function App() {
     fetchImages();
   }, []);
 
-  const fetchImages = async () => {
+  const fetchImages = async (isInitial = true) => {
     try {
-      // Make an HTTP GET request to the FastAPI server to fetch all images
-      const response = await axios.get("http://localhost:8000/images");
+      if (!isInitial) {
+        setIsLoadingMore(true);
+      }
 
-      setImages(response.data.image_urls)
+      // Use the nextOffset if we are loading more images, otherwise start afresh
+      const url = isInitial ? "http://localhost:8000/images?limit=20" : `http://localhost:8000/images?limit=20&offset=${encodeURIComponent(nextOffset)}`;
+
+      // Make an HTTP GET request to the FastAPI server to fetch all images
+      const response = await axios.get(url);
+
+      if (isInitial) {
+        setImages(response.data.image_urls);
+      } else {
+        // Append the new images to the existing ones
+        setImages(prev => [...prev, ...response.data.image_urls]);
+      }
+
+      setNextOffset(response.data.next_offset);
     } catch (error) {
       console.error("Error fetching images:", error)
       alert("Error fetching messages", error);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -188,6 +206,25 @@ function App() {
           )}
         </div>
       )}
+
+      <div className='flex flex-col items-center py-12'>
+        {nextOffset ? (
+          <button onClick={() => fetchImages(false)} disabled={isLoadingMore} className='flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 rounded-full transition-all disabled:opacity-50'>
+            {isLoadingMore ? (
+              <>
+                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                <span>Loading...</span>
+              </>
+            ) : (
+              "Load More"
+            )}
+          </button>
+        ) : (
+          images.length > 0 && (
+            <p className='text-zinc-500 italic'>You've reached the end of the gallery.</p>
+          )
+        )}
+      </div>
     </div>
   )
 }

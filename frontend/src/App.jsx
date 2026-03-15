@@ -16,6 +16,7 @@ function App() {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 50;  // Minimum distance considered a swipe
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
   const onTouchStart = (e) => {
     setTouchEnd(null);
@@ -84,7 +85,7 @@ function App() {
       formData.append("file", files[i]);
 
       try {
-        const response = await axios.post("http://localhost:8000/upload", formData, {
+        const response = await axios.post(`${API_URL}/upload`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -127,7 +128,7 @@ function App() {
       }
 
       // Use the nextOffset if we are loading more images, otherwise start afresh
-      const url = isInitial ? "http://localhost:8000/images?limit=20" : `http://localhost:8000/images?limit=20&offset=${encodeURIComponent(nextOffset)}`;
+      const url = isInitial ? `${API_URL}/images?limit=20` : `${API_URL}/images?limit=20&offset=${encodeURIComponent(nextOffset)}`;
 
       // Make an HTTP GET request to the FastAPI server to fetch all images
       const response = await axios.get(url);
@@ -152,7 +153,7 @@ function App() {
     if (!window.confirm("Are you sure you want to delete this image?")) return;
 
     try {
-      await axios.delete(`http://localhost:8000/images/${encodeURIComponent(filename)}`)
+      await axios.delete(`${API_URL}/images/${encodeURIComponent(filename)}`)
       setImages((prevImages) => prevImages.filter((image) => image.filename !== filename));
 
       // if (selectedImg?.filename === filename) {

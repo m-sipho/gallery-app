@@ -204,36 +204,52 @@ function App() {
       </div>
 
       {selectedImgIndex !== null && (
-        <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300'>
-          <button onClick={() => setSelectedImgIndex(null)} className='absolute top-6 right-6 text-white hover:text-gray-300 transition-colors'>
-            <X className='cursor-pointer' size={40} />
-          </button>
+  <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} className='fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm animate-in fade-in duration-300'>
+    {/* Close Button */}
+    <div className="w-full flex justify-end p-6">
+      <button onClick={() => setSelectedImgIndex(null)} className='text-white/70 hover:text-white transition-colors'>
+        <X size={40} />
+      </button>
+    </div>
 
-          {/* Left Arrow */}
-          {selectedImgIndex > 0 && (
-            <button onClick={showPrev} className='absolute left-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-aa z-60'>
-              <ChevronLeft size={30} />
-            </button>
-          )}
-          <div className='relative flex flex-col items-center max-w-full' onClick={(e) => e.stopPropagation()}>
-            <img src={images[selectedImgIndex].url} alt="Fullscreen view" className='max-w-full text-white max-h-[90vh] rounded-lg object-contain' />
-
-            {/* Counter */}
-            <div className='mt-6 text-white font-mono bg-white/10 px-4 py-1.5 rounded-full border border-white/10 tracking-widest'>
-              <span className='text-emerald-400 font-bold'>{selectedImgIndex + 1}</span>
-              <span className='mx-2 opacity-30'>/</span>
-              {images.length}
-            </div>
-          </div>
-
-          {/* Right Arrow */}
-          {selectedImgIndex < images.length - 1 && (
-            <button onClick={showNext} className='absolute right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-60'>
-              <ChevronRight size={30} />
-            </button>
-          )}
-        </div>
+    {/* Arrows and Image */}
+    <div className="flex-1 relative flex items-center justify-center w-full min-h-0 px-4">
+      
+      {/* Left Arrow */}
+      {selectedImgIndex > 0 && (
+        <button onClick={showPrev} className='hidden md:block absolute left-6 p-3 rounded-full bg-white/5 text-white hover:bg-white/20 transition-all z-20'>
+          <ChevronLeft size={30} />
+        </button>
       )}
+
+      {/* The Image Container */}
+      <div className='relative h-full flex items-center justify-center max-w-5xl' onClick={(e) => e.stopPropagation()}>
+        <img src={images[selectedImgIndex].url} alt="Fullscreen view" className='max-w-full max-h-full rounded-lg object-contain shadow-2xl select-none'/>
+      </div>
+
+      {/* Right Arrow */}
+      {selectedImgIndex < images.length - 1 && (
+        <button onClick={showNext} className='hidden md:block absolute right-6 p-3 rounded-full bg-white/5 text-white hover:bg-white/20 transition-all z-20'>
+          <ChevronRight size={30} />
+        </button>
+      )}
+    </div>
+
+    {/* 3. BOTTOM BAR: Counter Section */}
+    <div className='w-full py-10 flex flex-col items-center gap-2'>
+      <div className='text-white font-mono bg-white/10 px-6 py-2 rounded-full border border-white/5 tracking-widest'>
+        <span className='text-emerald-400 font-bold'>{selectedImgIndex + 1}</span>
+        <span className='mx-2 opacity-30'>/</span>
+        {images.length}
+      </div>
+      
+      {/* Optional: Show filename here since we have space now */}
+      <p className="text-white/30 text-xs italic truncate max-w-50">
+        {images[selectedImgIndex].filename}
+      </p>
+    </div>
+  </div>
+)}
 
       <div className='flex flex-col items-center py-12'>
         {nextOffset ? (

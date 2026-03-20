@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { X, Upload, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
+import { X, Upload, ChevronLeft, ChevronRight, Trash2, Loader } from "lucide-react"
 import GalleryImage from './components/GalleryImage';
 
 function App() {
   
   const [images, setImages] = useState([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [selectedImgIndex, setSelectedImgIndex] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -138,6 +139,8 @@ function App() {
     try {
       if (!isInitial) {
         setIsLoadingMore(true);
+      } else {
+        setIsInitialLoading(true);
       }
 
       // Use the nextOffset if we are loading more images, otherwise start afresh
@@ -159,6 +162,7 @@ function App() {
       alert("Error fetching messages", error);
     } finally {
       setIsLoadingMore(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -207,12 +211,24 @@ function App() {
           </div>
         )}
       </div>
+      
+      {isInitialLoading ? (
+        <div className='flex items-center justify-center h-[50vh]'>
+          <div className='relative flex items-center justify-center'>
+            <Loader strokeWidth={1} size={140} className='animate-spin text-zinc-500/20' />
 
-      <div className='columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4 overflow-y-auto'>
-        {images.map((image, index) => (
-          <GalleryImage index={index} image={image} onMaximize={() => setSelectedImgIndex(index)} onDelete={handleDelete} />
-        ))}
-      </div>
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <p className='text-[13px] text-zinc-500 font-mono tracking-tighter animate-pulse'>FETCHING</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className='columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4 overflow-y-auto'>
+          {images.map((image, index) => (
+            <GalleryImage index={index} image={image} onMaximize={() => setSelectedImgIndex(index)} onDelete={handleDelete} />
+          ))}
+        </div>
+      )}
 
       {selectedImgIndex !== null && (
         <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} className='fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm animate-in fade-in duration-300'>

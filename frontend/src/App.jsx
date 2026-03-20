@@ -55,6 +55,31 @@ function App() {
     }
   }, [selectedImgIndex])
 
+  useEffect(() => {
+    const handleBackButton = (e) => {
+      if (selectedImgIndex !== null) {
+          setSelectedImgIndex(null);
+      }
+    };
+
+    if (selectedImgIndex !== null) {
+      window.history.pushState({ fullscreen: true }, "");
+
+      // Listen for the back button
+      window.addEventListener("popstate", handleBackButton);
+    }
+
+    return  () => {
+      window.removeEventListener("popstate", handleBackButton);
+    }
+  }, [selectedImgIndex])
+
+  const closeFullscreenView = (e) => {
+    if (selectedImgIndex !== null) {
+      window.history.back();
+    }
+  }
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -243,7 +268,7 @@ function App() {
               <Trash2 size={20} />
             </button>
 
-            <button onClick={() => setSelectedImgIndex(null)} className='text-white/70 hover:text-white transition-colors'>
+            <button onClick={closeFullscreenView} className='text-white/70 hover:text-white transition-colors'>
               <X size={40} />
             </button>
           </div>

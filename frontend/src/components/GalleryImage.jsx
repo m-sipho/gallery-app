@@ -15,7 +15,7 @@ function GalleryImage({ index, image, onMaximize, onDelete }) {
                 </div>
             )}
             <img src={image.url} alt={`Gallery Image ${index}`} className={`w-full h-auto object-cover transition-transform duration-500 group-hover:scale-110 ${isLoading ? 'opacity-0 h-0' : 'opacity-100'}`} onLoad={() => setIsLoading(false)} loading='lazy' />
-            <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-5 pointer-events-none group-hover:pointer-events-auto'>
+            <div className='absolute inset-0 bg-black/40 opacity-0 md:group-hover:opacity-100 transition-all flex items-center justify-center gap-5 pointer-events-none md:group-hover:pointer-events-auto'>
                 <button className='cursor-pointer' onClick={onMaximize} title='Maximize'>
                 <Maximize className='text-white hover:text-zinc-300' size={32} />
                 </button>

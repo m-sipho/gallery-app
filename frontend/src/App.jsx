@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { X, Upload, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, Upload, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import GalleryImage from './components/GalleryImage';
 
 function App() {
@@ -156,9 +156,7 @@ function App() {
       await axios.delete(`${API_URL}/images/${encodeURIComponent(filename)}`)
       setImages((prevImages) => prevImages.filter((image) => image.filename !== filename));
 
-      // if (selectedImg?.filename === filename) {
-      //   setSelectedImage(null);
-      // }
+      setSelectedImgIndex(null);
     } catch (error) {
       console.error("Error deleting image:", error);
       alert("Error deleting image");
@@ -204,52 +202,56 @@ function App() {
       </div>
 
       {selectedImgIndex !== null && (
-  <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} className='fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm animate-in fade-in duration-300'>
-    {/* Close Button */}
-    <div className="w-full flex justify-end p-6">
-      <button onClick={() => setSelectedImgIndex(null)} className='text-white/70 hover:text-white transition-colors'>
-        <X size={40} />
-      </button>
-    </div>
+        <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} className='fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm animate-in fade-in duration-300'>
+          {/* Close Button */}
+          <div className="w-full flex justify-between items-center p-6">
+            <button className='p-3 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all border border-red-500/20' title='Delete Image' onClick={(e) => {e.stopPropagation(); handleDelete(images[selectedImgIndex].filename);}}>
+              <Trash2 size={20} />
+            </button>
 
-    {/* Arrows and Image */}
-    <div className="flex-1 relative flex items-center justify-center w-full min-h-0 px-4">
-      
-      {/* Left Arrow */}
-      {selectedImgIndex > 0 && (
-        <button onClick={showPrev} className='hidden md:block absolute left-6 p-3 rounded-full bg-white/5 text-white hover:bg-white/20 transition-all z-20'>
-          <ChevronLeft size={30} />
-        </button>
+            <button onClick={() => setSelectedImgIndex(null)} className='text-white/70 hover:text-white transition-colors'>
+              <X size={40} />
+            </button>
+          </div>
+
+          {/* Arrows and Image */}
+          <div className="flex-1 relative flex items-center justify-center w-full min-h-0 px-4">
+            
+            {/* Left Arrow */}
+            {selectedImgIndex > 0 && (
+              <button onClick={showPrev} className='hidden md:block absolute left-6 p-3 rounded-full bg-white/5 text-white hover:bg-white/20 transition-all z-20'>
+                <ChevronLeft size={30} />
+              </button>
+            )}
+
+            {/* The Image Container */}
+            <div className='relative h-full flex items-center justify-center max-w-5xl' onClick={(e) => e.stopPropagation()}>
+              <img src={images[selectedImgIndex].url} alt="Fullscreen view" className='max-w-full max-h-full rounded-lg object-contain shadow-2xl select-none'/>
+            </div>
+
+            {/* Right Arrow */}
+            {selectedImgIndex < images.length - 1 && (
+              <button onClick={showNext} className='hidden md:block absolute right-6 p-3 rounded-full bg-white/5 text-white hover:bg-white/20 transition-all z-20'>
+                <ChevronRight size={30} />
+              </button>
+            )}
+          </div>
+
+          {/* 3. BOTTOM BAR: Counter Section */}
+          <div className='w-full py-10 flex flex-col items-center gap-2'>
+            <div className='text-white font-mono bg-white/10 px-6 py-2 rounded-full border border-white/5 tracking-widest'>
+              <span className='text-emerald-400 font-bold'>{selectedImgIndex + 1}</span>
+              <span className='mx-2 opacity-30'>/</span>
+              {images.length}
+            </div>
+            
+            {/* Optional: Show filename here since we have space now */}
+            <p className="text-white/30 text-xs italic truncate max-w-50">
+              {images[selectedImgIndex].filename}
+            </p>
+          </div>
+        </div>
       )}
-
-      {/* The Image Container */}
-      <div className='relative h-full flex items-center justify-center max-w-5xl' onClick={(e) => e.stopPropagation()}>
-        <img src={images[selectedImgIndex].url} alt="Fullscreen view" className='max-w-full max-h-full rounded-lg object-contain shadow-2xl select-none'/>
-      </div>
-
-      {/* Right Arrow */}
-      {selectedImgIndex < images.length - 1 && (
-        <button onClick={showNext} className='hidden md:block absolute right-6 p-3 rounded-full bg-white/5 text-white hover:bg-white/20 transition-all z-20'>
-          <ChevronRight size={30} />
-        </button>
-      )}
-    </div>
-
-    {/* 3. BOTTOM BAR: Counter Section */}
-    <div className='w-full py-10 flex flex-col items-center gap-2'>
-      <div className='text-white font-mono bg-white/10 px-6 py-2 rounded-full border border-white/5 tracking-widest'>
-        <span className='text-emerald-400 font-bold'>{selectedImgIndex + 1}</span>
-        <span className='mx-2 opacity-30'>/</span>
-        {images.length}
-      </div>
-      
-      {/* Optional: Show filename here since we have space now */}
-      <p className="text-white/30 text-xs italic truncate max-w-50">
-        {images[selectedImgIndex].filename}
-      </p>
-    </div>
-  </div>
-)}
 
       <div className='flex flex-col items-center py-12'>
         {nextOffset ? (

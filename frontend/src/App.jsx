@@ -169,13 +169,18 @@ function App() {
   const handleDelete = async (filename) => {
     if (!window.confirm("Are you sure you want to delete this image?")) return;
 
-    try {
-      await axios.delete(`${API_URL}/images/${encodeURIComponent(filename)}`)
-      setImages((prevImages) => prevImages.filter((image) => image.filename !== filename));
+    // Backup the current state
+    const previousImages = [...images];
 
-      setSelectedImgIndex(null);
+    setImages((prev) => prev.filter((image) => image.filename !== filename));
+    setSelectedImgIndex(null);
+
+    try {
+      await axios.delete(`${API_URL}/images/${encodeURIComponent(filename)}`);
+      console.log("Deletion complete!");
     } catch (error) {
       console.error("Error deleting image:", error);
+      setImages(previousImages);
       alert("Error deleting image");
     }
   }

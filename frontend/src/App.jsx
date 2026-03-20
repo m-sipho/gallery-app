@@ -41,6 +41,19 @@ function App() {
     }
   };
 
+  // Prevent scrolling on Fullscreen view
+  useEffect(() => {
+    if (selectedImgIndex !== null) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    }
+  }, [selectedImgIndex])
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
